@@ -278,9 +278,12 @@ int main(){
 
     inorder(tree->root);
 
-    //hb_tree_remove(tree,"buser");
+    hb_tree_remove(tree,"buser");
 
-    //inorder(tree->root);
+    printf("\n\n");
+
+    inorder(tree->root);
+    printf("\n\n");
 
     printf("search user fd : %d\n",hb_tree_search(tree,"duser"));
 

@@ -149,10 +149,7 @@ int main(int argc, char const *argv[])
         }
 
 
-    }
-
-    
-    // message 
+    } 
 
 	close(client_socket);
 	

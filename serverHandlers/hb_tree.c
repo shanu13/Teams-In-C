@@ -34,9 +34,10 @@ void
 del_func(hb_node_t* node)
 {
     free(node->key);
-    free(node->parent);
-    free(node->llink);
-    free(node->rlink);
+    node->parent = NULL;
+    node->llink = NULL;
+    node->rlink = NULL;
+   
 }
 
 
@@ -254,7 +255,7 @@ hb_tree_remove(hb_tree_t* tree, const void* key)
         return true;
     }
 
-    bool left = parent->llink = node;
+    bool left = parent->llink == node;
     if (left) {
         parent->llink = child;
     } else {
