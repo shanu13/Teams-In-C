@@ -31,6 +31,16 @@ str_cmp_func(const void* k1, const void* k2)
 }
 
 void 
+del_func(hb_node_t* node)
+{
+    free(node->key);
+    free(node->parent);
+    free(node->llink);
+    free(node->rlink);
+}
+
+
+bool
 rotate_right(hb_tree_t *tree, hb_node_t *node)
 {
     hb_node_t *nl = node->llink;
@@ -52,13 +62,14 @@ rotate_right(hb_tree_t *tree, hb_node_t *node)
         tree->root = nl;
     }
 
+    bool hc = (nl->bal != 0);
     node->bal += 1 - MIN(nl->bal, 0);
     nl->bal   += 1 + MAX(node->bal, 0);
 
-    return;
+    return hc;
 }
 
-void
+bool
 rotate_left(hb_tree_t *tree, hb_node_t *node)
 {
     hb_node_t *nr = node->rlink;
@@ -80,8 +91,10 @@ rotate_left(hb_tree_t *tree, hb_node_t *node)
         tree->root = nr;
     }
     
+    bool hc  = (nr->bal!=0);
     node->bal -= 1 + MAX(nr->bal, 0);
     nr->bal   -= 1 - MIN(node->bal, 0);
+    return hc;
 
 }
 
@@ -133,7 +146,7 @@ hb_tree_insert(hb_tree_t* tree, void* key, int fd)
       }
     }
 
-    hb_node_t node =new_node(key,fd);
+     node =new_node(key,fd);
 
     if (!(node->parent = parent)) {
         tree->root = node;
@@ -195,7 +208,7 @@ hb_tree_remove(hb_tree_t* tree, const void* key)
         if (cmp < 0) {
             parent = node;
             node = node->llink;
-        } else {
+        } else if (cmp) {
             parent = node;
             node = node->rlink;
         } else {
@@ -228,7 +241,99 @@ hb_tree_remove(hb_tree_t* tree, const void* key)
         parent = out->parent;
     }
 
+    hb_node_t* child = node->llink ? node->llink : node->rlink;
+    del_func(node);
+
+    if (child) {
+        child->parent = parent;
+    }
+
+    if (!parent) {
+        tree->root = child;
+        tree->count--;
+        return true;
+    }
+
+    bool left = parent->llink = node;
+    if (left) {
+        parent->llink = child;
+    } else {
+        parent->rlink = child;
+    }
+
+    unsigned rotations = 0;
+
+    for (; ; ) {
+        if (left) {
+            if (++parent->bal == 0) {
+                node = parent;
+                goto higher;
+            }
+            if (parent->bal == 2) {
+                if (parent->rlink->bal < 0) {
+                    rotations+=2;
+                    rotate_right(tree, parent->rlink);
+                    rotate_left(tree, parent);
+                } else {
+                    rotations += 1;
+                    if(!rotate_left(tree, parent)) {
+                        break;
+                    }
+                }
+            } else {
+                break;
+            }
+        } else  {
+            if (--parent->bal == 0) {
+                node = parent;
+                goto higher;
+            }
+            if (--parent->bal == -2) {
+                if (parent->llink->bal > 0) {
+                    rotations += 2;
+                    rotate_left(tree, parent->llink);
+                } else {
+                    rotations+=1;
+                    if (!rotate_right(tree, parent)) {
+                        break;
+                    }
+                }
+            } else {
+                 break;
+            }
+        }
+
+        node = parent->parent;
+
+        higher :
+            if (!(parent = node->parent)) 
+                break;
+            left = (parent->llink == node);
+    }
+
+    tree->rotation_count += rotations;
+    tree->count--;
+    return true;
+
+}
 
 
+int
+hb_tree_search(hb_tree_t *Tree, const void* key)
+{
+    hb_tree_t* tree = Tree;
+    hb_node_t* node = tree->root;
 
+    while(node) {
+        int cmp = str_cmp_func(key, node->key);
+        if (cmp < 0) {
+            node = node->llink;
+        } else if (cmp) {
+            node = node->rlink;
+        } else {
+            return node->fd;
+        }
+    }
+
+    return -1;
 }

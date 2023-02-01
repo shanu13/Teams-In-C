@@ -4,6 +4,8 @@
 #include <string.h>
 #include <arpa/inet.h>
 
+#include "../serverHeaders/hb_tree.h"
+
 #include <unistd.h>
 
 
@@ -15,7 +17,7 @@
 #define htonll(x) ((1==htonl(1)) ? (x) : ((uint64_t)htonl((x) & 0xFFFFFFFF) << 32) | htonl((x) >> 32))
 #define ntohll(x) ((1==ntohl(1)) ? (x) : ((uint64_t)ntohl((x) & 0xFFFFFFFF) << 32) | ntohl((x) >> 32))
 
-#define SWAP(a,b,temp) do {temp = (a); (a) = (b); (b) = temp;} while(0)
+//#define SWAP(a,b,temp) do {temp = (a); (a) = (b); (b) = temp;} while(0)
 
 
 
@@ -118,13 +120,27 @@ user_t *deser(uint8_t *buff){
 }
 
 
-void
-swap_int(int *a, int *b) 
+//void
+//swap_int(int *a, int *b) 
+//{
+//    int temp;
+//    temp = *a;
+//    *a = *b;
+//    *b = temp;
+//    return;
+//}
+
+void 
+inorder(hb_node_t* root)
 {
-    int temp;
-    temp = *a;
-    *a = *b;
-    *b = temp;
+    if (root == NULL) {
+        return;
+    }
+
+    inorder(root->llink);
+    printf("user : %s with fd : %d\n",(char*)root->key,root->fd);
+    inorder(root->rlink);
+    
     return;
 }
 
@@ -253,11 +269,23 @@ int main(){
    // printf("user : %s\n",ud->user);
    // printf("password : %s\n",ud->password);
 
-    int a =3;
-    int b = 5; 
-    swap_int(&a,&b);
+    hb_tree_t* tree = hb_tree_new();
 
-    printf(" a : %d, b : %d\n",a,b);
+    hb_tree_insert(tree, "duser", 7);
+    hb_tree_insert(tree, "cuser", 8);
+    hb_tree_insert(tree, "buser", 19);
+    hb_tree_insert(tree, "auser", 21);
+
+    inorder(tree->root);
+
+    //hb_tree_remove(tree,"buser");
+
+    //inorder(tree->root);
+
+    printf("search user fd : %d\n",hb_tree_search(tree,"duser"));
+
+
+   
 
     return 0;
 }
