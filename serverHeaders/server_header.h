@@ -39,8 +39,10 @@ typedef struct server_message_s{
 
 typedef struct message_chat_s{
 	message_header_t 		 header;
-	char 					 *tosend;
-	char 					 *message_to_send;
+    uint16_t                 to_user_len;
+    char                    *to_user;
+    uint16_t                 message_len;
+	char 					*message;
 } message_chat_t;
 
 

@@ -60,6 +60,9 @@ int main() {
        perror("epoll ctl : server_socket ");
        exit(EXIT_FAILURE);
    }
+
+    hb_tree_t* Tree = hb_tree_new();
+
     int nfds;
      
 	while(1){
@@ -74,6 +77,14 @@ int main() {
 	          }
             else{
                     client_conn_data_t *cdp = ((client_conn_data_t *)events[n].data.ptr);
+                    if (events[n].events && EPOLLERR) {
+                        if (cdp->user != NULL) {
+                            hb_tree_remove(Tree, cdp->user);
+                        }
+
+                        closeConn(epfd, cdp, &ev);
+                        continue;
+                    }
 
                     int clientfd =  cdp->fd;
                     
@@ -91,8 +102,11 @@ int main() {
                         continue;
                     }
 
-                    if(ret == 0){
-                        closeConn(epfd,cdp,&ev);
+                    if (ret == 0) {
+                        if (cdp->user != NULL) {
+                            hb_tree_remove(Tree, cdp->user);
+                        }
+                        closeConn(epfd, cdp ,&ev);
                         continue;
                     }
 
@@ -137,7 +151,7 @@ int main() {
                          case AUTH_STATE :
                             if(cdp->buffer_used >= ((message_auth_t *)cdp->ptr)->header.len){ 
                                  printf("AUTH STATE\n");
-                                 if(Authenticate(cdp) < 0){
+                                 if(Authenticate(cdp,Tree) < 0){
                                      SendMessage("401",cdp->fd);
                                      printf("Invalid Credentials\n");
                                      resetClient(cdp);
@@ -149,6 +163,7 @@ int main() {
                                            perror("Cannot Send Message");
                                            break;
                                      }
+                                     refreshClient(cdp);
                                      cdp->client_state = MESSAGE_STATE;
                                  }
                              }
@@ -156,6 +171,23 @@ int main() {
 
                         case MESSAGE_STATE : 
                              printf("Messsage State \n");
+                             if (cdp->buffer_used >= SIZE_HEADER) {
+                                 if(cdp->offset ==0 && Header(cdp) < 0){
+                                   printf("Invalid Header \n");
+                                    closeConn(epfd,cdp,&ev);
+                                    continue;
+                                }else{
+                                   if (cdp->buffer_used >= ((message_auth_t *)cdp->ptr)->header.len) {
+                                         message_chat_t *msg_chat = decodeMessageChat(cdp);
+                                         int sender_fd = hb_tree_search(Tree,msg_chat->to_user);
+                                         uint32_t buff_size = sizeof(msg_chat);
+                                         Write(sender_fd,cdp->buff, buff_size);
+                                         free(msg_chat->to_user);
+                                         free(msg_chat->message);
+                                         refreshClient(cdp);                                         
+                                   }     
+                                }
+                             } 
                              break;
                     }  
                }

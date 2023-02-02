@@ -269,26 +269,67 @@ int main(){
    // printf("user : %s\n",ud->user);
    // printf("password : %s\n",ud->password);
 
-    hb_tree_t* tree = hb_tree_new();
+    //hb_tree_t* tree = hb_tree_new();
 
-    hb_tree_insert(tree, "duser", 7);
-    hb_tree_insert(tree, "cuser", 8);
-    hb_tree_insert(tree, "buser", 19);
-    hb_tree_insert(tree, "auser", 21);
+    //hb_tree_insert(tree, "duser", 7);
+    //hb_tree_insert(tree, "cuser", 8);
+    //hb_tree_insert(tree, "buser", 19);
+    //hb_tree_insert(tree, "auser", 21);
+    //hb_tree_insert(tree, "eukser",14);
+    //hb_tree_insert(tree, "quser", 13);
+    //hb_tree_insert(tree, "fuser", 18);
+    //hb_tree_insert(tree, "ruser", 43);
+    //hb_tree_insert(tree, "guser", 67);
+    //hb_tree_insert(tree, "zuser", 45);
+    //hb_tree_insert(tree, "huser", 76);
+    //hb_tree_insert(tree, "wuser", 89);
+    //hb_tree_insert(tree, "iuser", 19);
+    //hb_tree_insert(tree, "juser", 99);
+    //hb_tree_insert(tree, "suser", 32);
+    //hb_tree_insert(tree, "kuser", 67);
+    //hb_tree_insert(tree, "tuser", 69);
+    //hb_tree_insert(tree, "luser", 72);
+    //hb_tree_insert(tree, "muser", 56);
+    //hb_tree_insert(tree, "nuser", 27);
+    //hb_tree_insert(tree, "yuser", 3);
 
-    inorder(tree->root);
+    //inorder(tree->root);
 
-    hb_tree_remove(tree,"buser");
+    //hb_tree_remove(tree,"buser");
+    //hb_tree_remove(tree,"luser");
+    //hb_tree_remove(tree,"fuser");
+    //printf("\n\n");
 
-    printf("\n\n");
+    //inorder(tree->root);
+    //printf("\n\n");
 
-    inorder(tree->root);
-    printf("\n\n");
+    //printf("search user fd : %d\n",hb_tree_search(tree,"zuser"));
 
-    printf("search user fd : %d\n",hb_tree_search(tree,"duser"));
+   // char* line;
+   // size_t size = 0;
+   // uint16_t  len =0;
+    //scanf("%ms", &line);
+    //line[strlen(line)] = '\0';
 
+    //len = getline(&line,&size,stdin);
 
-   
+    //printf("len : %d\n", len);
+    //printf("size : %zu\n", size);
+    //line[len-1] = '\0';
+
+    //printf("string  : %s\n", line);
+
+    //printf("size of %zu\n",sizeof(line));
+
+    //printf("\n");
+
+     void* ptr ;
+     int a = 6;
+     ptr = &a;
+
+     int* b = ptr;
+
+     printf("%d\n",*b);
 
     return 0;
 }

@@ -34,9 +34,11 @@ void
 del_func(hb_node_t* node)
 {
     free(node->key);
-    node->parent = NULL;
-    node->llink = NULL;
-    node->rlink = NULL;
+  
+    free(node);
+   // node->parent = NULL;
+   // node->llink = NULL;
+   // node->rlink = NULL;
    
 }
 
@@ -46,7 +48,7 @@ rotate_right(hb_tree_t *tree, hb_node_t *node)
 {
     hb_node_t *nl = node->llink;
     if ((node->llink = nl->rlink) != NULL) {
-        nl->llink->parent = node;
+        node->llink->parent = node;
     }
     nl->rlink = node;
 

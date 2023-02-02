@@ -33,6 +33,14 @@ typedef struct message_auth_s {
     char                   *password;
 } message_auth_t;
 
+typedef struct message_chat_s {
+    message_header_t        header;
+    uint16_t                to_user_len;
+    char                   *to_user;
+    uint16_t                message_len;
+    char                   *message;
+} message_chat_t;
+
 typedef struct server_message_s {
     message_header_t        header;
     char                   *message;
@@ -48,5 +56,15 @@ int                         encode_auth_msg(message_auth_t *auth_token , uint8_t
 int                         decode_header(message_header_t *header , uint8_t *buff, uint32_t  *buff_size);
 
 server_message_t*           decode_server_message(uint8_t *buff);
+
+void                        encodeMessage_send(message_chat_t* msg_chat, uint8_t* buff, uint32_t* buff_used);
+
+void                        createMessage(uint8_t* buff, uint32_t* buff_used);
+
+int                         sendMessage(int fd,uint8_t* buff, uint32_t buff_size);
+
+message_chat_t*             decodeMessage_recv(uint8_t* buff);
+
+
 
 

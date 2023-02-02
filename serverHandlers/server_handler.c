@@ -15,6 +15,7 @@
 
 #include "../serverHeaders/server_header.h"
 #include "../serverHeaders/handler_header.h"
+#include "../serverHeaders/hb_tree.h"
 
 #define MAGIC 0xABCDDCBA
 
@@ -26,7 +27,7 @@
 client_conn_data_t* 
 CreateNewClient(int clientfd)
 {
-    client_conn_data_t *client = (client_conn_data_t *)malloc(sizeof(client_conn_data_t));
+    client_conn_data_t* client = (client_conn_data_t*)malloc(sizeof(client_conn_data_t));
     
     client->fd = clientfd;
     client->buff = NULL;
@@ -40,7 +41,7 @@ CreateNewClient(int clientfd)
 
 
 void
-NewUserHandler(int epfd, int server_socket, struct epoll_event *ev)
+NewUserHandler(int epfd, int server_socket, struct epoll_event* ev)
 {
     struct sockaddr_in client_address;
     socklen_t client_addrlen = sizeof(client_address);
@@ -61,7 +62,7 @@ NewUserHandler(int epfd, int server_socket, struct epoll_event *ev)
 
     client_conn_data_t *client = CreateNewClient(client_socket);
 
-    ev->events = EPOLLIN|EPOLLOUT|EPOLLET;
+    ev->events = EPOLLIN|EPOLLOUT|EPOLLET|EPOLLERR;
     ev->data.ptr = client;
 
    if (epoll_ctl(epfd,EPOLL_CTL_ADD,client_socket,ev) == -1) {
@@ -78,7 +79,7 @@ NewUserHandler(int epfd, int server_socket, struct epoll_event *ev)
 
 
 void
-freeClient(client_conn_data_t *client)
+freeClient(client_conn_data_t* client)
 {
     free(client->ptr);
     free(client->buff);
@@ -89,7 +90,7 @@ freeClient(client_conn_data_t *client)
 }
 
 void
-closeConn(int epfd, client_conn_data_t *client, struct epoll_event *ev)
+closeConn(int epfd, client_conn_data_t* client, struct epoll_event* ev)
 {
      int clientfd = client->fd;
      printf("closing connection with client %d \n", clientfd);
@@ -102,7 +103,7 @@ closeConn(int epfd, client_conn_data_t *client, struct epoll_event *ev)
 }
 
 void
-encode_header(message_header_t *header, uint8_t *buff, uint32_t *buff_size)
+encode_header(message_header_t* header, uint8_t* buff, uint32_t* buff_size)
 {
     uint32_t offset = 0;
     *((uint64_t *)(buff + offset)) = htonll(header->magic);
@@ -120,7 +121,7 @@ encode_header(message_header_t *header, uint8_t *buff, uint32_t *buff_size)
 }
 
 void 
-encode_message(server_message_t *s_msg, uint8_t *buff, uint32_t *buff_size)
+encode_message(server_message_t* s_msg, uint8_t* buff, uint32_t* buff_size)
 {
     encode_header(&(s_msg->header), buff,buff_size);
     memcpy(buff+ *buff_size, s_msg->message,sizeof(s_msg->message));
@@ -131,7 +132,7 @@ encode_message(server_message_t *s_msg, uint8_t *buff, uint32_t *buff_size)
 
 
 void
-decode_header(uint8_t *in_buffer, message_header_t *header, uint32_t *offset)
+decode_header(uint8_t* in_buffer, message_header_t* header, uint32_t* offset)
 {
     header->magic = ntohll(*((uint64_t *)(in_buffer+ *offset)));
     *offset+= sizeof(header->magic);
@@ -146,8 +147,8 @@ decode_header(uint8_t *in_buffer, message_header_t *header, uint32_t *offset)
  }
 
 void
-decode_message_auth(uint8_t *in_buffer, message_auth_t *auth_token, uint32_t *offset)
-{
+decode_message_auth(uint8_t* in_buffer, message_auth_t* auth_token, uint32_t* offset)
+{ 
    // printf("decode_message_auth \n");
     auth_token->user_len = ntohs(*((uint16_t *)(in_buffer+ *offset)));
     *offset+= sizeof(auth_token->user_len);
@@ -169,7 +170,7 @@ decode_message_auth(uint8_t *in_buffer, message_auth_t *auth_token, uint32_t *of
 
 
 int
-VerifyHeader(client_conn_data_t *client)
+VerifyHeader(client_conn_data_t* client)
 {
     message_auth_t *auth_token = (message_auth_t *)malloc(sizeof(message_auth_t));
     client->ptr = auth_token;
@@ -178,6 +179,7 @@ VerifyHeader(client_conn_data_t *client)
 
     if(((message_auth_t *)client->ptr)->header.magic != MAGIC){
         printf("magic : %lu\n",((message_auth_t *)client->ptr)->header.magic );
+        free(client->ptr);
         client->client_state = ERROR_STATE;
                  return -1;
     }
@@ -186,8 +188,8 @@ VerifyHeader(client_conn_data_t *client)
 }
 
 int
-AuthVerify(const char *user, const char *password)
-{
+AuthVerify(const char* user, const char* password)
+{ 
     if(strcmp(user,"shantanu") == 0  && strcmp(password,"shantanu") == 0)
         return 0;
     else if(strcmp(user,"mridul") == 0 &&  strcmp(password,"mridul") == 0)
@@ -200,20 +202,31 @@ AuthVerify(const char *user, const char *password)
 }
 
 int 
-Authenticate(client_conn_data_t *client)
+Authenticate(client_conn_data_t* client, hb_tree_t* Tree)
 {
+    hb_tree_t* tree = Tree;
     decode_message_auth(client->buff, client->ptr, &(client->offset));
-   // message_auth_t *temp =(message_auth_t *)client->ptr;
+    message_auth_t *temp =(message_auth_t *)client->ptr;
    // printf("username : %s\n",temp->user);
    // printf("username len %u\n",temp->user_len);
 
    // printf("password len %u\n",temp->password_len);
    // printf("password : %s\n",temp->password);
-    if(AuthVerify(((message_auth_t *)client->ptr)->user,((message_auth_t *)client->ptr)->password) < 0){
-            free(((message_auth_t *)client->ptr)->user);
+    if(AuthVerify(((message_auth_t*)client->ptr)->user,((message_auth_t *)client->ptr)->password) < 0){
+            free(((message_auth_t*)client->ptr)->user);
             free(((message_auth_t *)client->ptr)->password);
             return -1;
     }
+    
+    if (hb_tree_insert(tree, temp->user, client->fd)  == NULL) {
+            free(((message_auth_t*)client->ptr)->user);
+            free(((message_auth_t *)client->ptr)->password);
+            return -1;
+    }
+
+    strcpy(client->user,temp->user);
+    free(((message_auth_t*)client->ptr)->user);
+    free(((message_auth_t *)client->ptr)->password);
 
     return 0;
 }
@@ -242,20 +255,20 @@ Write(int fd, uint8_t *buff, uint32_t buff_size)
     return 0;
 }
 
-int SendMessage(char *message, int fd)
+int SendMessage(char* message, int fd)
 {
-    server_message_t *s_msg = (server_message_t *)malloc(sizeof(server_message_t));
+    server_message_t* s_msg = (server_message_t *)malloc(sizeof(server_message_t));
     s_msg->header.magic = MAGIC;
     s_msg->header.message_type = SERVER_INFO;
     s_msg->message = message;
     s_msg->header.len = sizeof(message_header_t) + strlen(message);
 
-    uint8_t *buff = (uint8_t *)malloc(sizeof(server_message_t)*sizeof(uint8_t));
+    uint8_t* buff = (uint8_t *)malloc(sizeof(server_message_t)*sizeof(uint8_t));
     uint32_t buff_size = 0;
     encode_message(s_msg,buff,&buff_size);
     if(Write(fd,buff,buff_size) < 0) return -1;
     printf("Send Message bytes : %u\n",s_msg->header.len);
-    printf("SendMessage :%s\n",s_msg->message);
+    //printf("SendMessage :%s\n",s_msg->message);
     //free(s_msg->message);
     free(s_msg);
     free(buff);
@@ -280,4 +293,63 @@ void resetClient(client_conn_data_t *client){
    client->user = NULL;
 
    return  ;
+}
+
+void
+refreshClient(client_conn_data_t* client)
+{
+    free(client->ptr);
+    free(client->buff);
+
+    client->ptr = NULL;
+    client->buff = NULL;
+    client->buffer_used = 0;
+    client->offset = 0;
+    client->buffer_allocd = 0;
+
+    return;
+}
+
+int 
+Header(client_conn_data_t* client)
+{
+    message_chat_t* msg_chat = (message_chat_t*)malloc(sizeof(message_chat_t));
+    client->ptr = msg_chat;
+    decode_header(client->buff, &msg_chat->header , &client->offset);
+
+
+    if (((message_chat_t*)client->ptr)->header.magic != MAGIC) {
+            free(client->ptr);
+            return-1;
+    }
+
+    return 0;
+}
+
+
+message_chat_t*
+decodeMessageChat(client_conn_data_t* client)
+{
+   message_chat_t* msg_chat = client->ptr;
+   uint8_t* buff = client->buff;
+   uint32_t offset = client->offset;
+
+   msg_chat->to_user_len = ntohs(*(uint16_t*)(buff+offset));
+   offset+= sizeof(msg_chat->to_user_len);
+
+   msg_chat->to_user = (char *)calloc(msg_chat->to_user_len, sizeof(char));
+   memcpy(msg_chat->to_user, buff+offset, msg_chat->to_user_len);
+   offset += msg_chat->to_user_len;
+
+   msg_chat->message_len = ntohs(*(uint16_t*)(buff+offset));
+   offset+= sizeof(msg_chat->message_len);
+
+   msg_chat->message = (char *)calloc(msg_chat->message_len, sizeof(char));
+   memcpy(msg_chat->message, buff+offset, msg_chat->message_len);
+   offset += msg_chat->message_len;
+
+   client->offset = offset;
+    
+   return msg_chat;
+
 }

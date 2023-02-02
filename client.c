@@ -140,11 +140,82 @@ int main(int argc, char const *argv[])
 
                }
 
-            case MESSAGE_STATE : 
-                   continue;
-                  //printf("Message_state\n");
+            case MESSAGE_STATE : {
+                 //printf("Message_state\n");
+                 int option;
+                 printf("Enter 1 to Send Message\n Enter 2 to Recieve Message\n Enter 3 to close ");
+                 scanf("%d",&option);
+
+                 switch (option) {
+                    case 1 : {
+                           uint8_t *buff;
+                           uint32_t buff_used = 0;
+                           createMessage(buff, &buff_used);
+                           if (sendMessage(client_socket, buff, buff_used) < 0) { 
+                                 printf("Cannot Send \n");
+                                 continue;
+                            }else{
+                                printf("Message send succesfully\n");
+                            }      
+                            break;
+                       }
+
+                    case 2 : {
+                           uint8_t temp_buff[1024];
+                           bzero(temp_buff,0);
+                           uint8_t *read_buff = NULL;
+                           uint32_t read_buff_size = 0;
+                           size_t bytes_read = 0;
+                           while((bytes_read = read(client_socket,temp_buff,sizeof(temp_buff))) > 0){
+                                 //printf("bytes read %zu\n",bytes_read);  
+
+                              if(bytes_read == 0) break;
+
+                              if(read_buff == NULL){
+                                  read_buff = (uint8_t *)malloc(bytes_read);
+                                 if(read_buff == NULL){
+                                       printf("Malloc error\n");
+                                 }
+                              }else{
+                                  read_buff = realloc(read_buff,read_buff_size+bytes_read);
+                              } 
+                    
+                              memcpy(read_buff+read_buff_size,temp_buff,bytes_read);
+                              read_buff_size += bytes_read;
+                              //printf("%u\n",read_buff_size);
+
+                              bool is_read_full = false;
+
+                              if (read_buff_size >= SIZE_HEADER) {
+                                 uint16_t len = ntohs(*((uint16_t *)(read_buff+8)));
+                                 if (read_buff_size >= len ) {
+                                        is_read_full = true;
+                                }  
+                             }
+
+                            if (is_read_full){
+                                    break;
+                            }
+
+                         }  
+
+                        message_chat_t* msg_chat = decodeMessage_recv(read_buff);
+                        printf("Message from %s : %s\n",msg_chat->to_user, msg_chat->message);
+
+                        free(msg_chat->to_user);
+                        free(msg_chat->message);
+                        free(msg_chat);
+
+                        break;
+                      }
+
+                    default : printf("Wrong Option Selected\n");         
+                  } 
+    
+             }
 
 
+                                 
 
         }
 
