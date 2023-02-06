@@ -223,7 +223,7 @@ Authenticate(client_conn_data_t* client, hb_tree_t* Tree)
             free(((message_auth_t *)client->ptr)->password);
             return -1;
     }
-
+    client->user = (char*)calloc(strlen(temp->user),sizeof(char));
     strcpy(client->user,temp->user);
     free(((message_auth_t*)client->ptr)->user);
     free(((message_auth_t *)client->ptr)->password);
@@ -237,7 +237,7 @@ Write(int fd, uint8_t *buff, uint32_t buff_size)
 {
     size_t total_bytes_send = 0;
 
-    //printf("buff size : %u\n",buff_size);
+    printf("buff size : %u\n",buff_size);
     //printf("Write Started\n");
     while(total_bytes_send < buff_size){
         //printf("Writing\n");

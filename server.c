@@ -77,11 +77,11 @@ int main() {
 	          }
             else{
                     client_conn_data_t *cdp = ((client_conn_data_t *)events[n].data.ptr);
-                    if (events[n].events && EPOLLERR) {
+                    if (events[n].events & EPOLLERR) {
                         if (cdp->user != NULL) {
                             hb_tree_remove(Tree, cdp->user);
                         }
-
+                        printf("EPOLLERR\n");
                         closeConn(epfd, cdp, &ev);
                         continue;
                     }
@@ -95,7 +95,7 @@ int main() {
                     memset(buff,0,sizeof(buff));
                     int ret = read(clientfd,buff,sizeof(buff));
 
-                    //printf("ret : %d\n",ret);
+                    printf("ret : %d\n",ret);
                    
                     if(ret == -1){
                         printf("client goes in blocking state\n");
@@ -144,7 +144,7 @@ int main() {
                             }else{
                                 continue;
                             }
-                           //printf("header len %u\n",((message_auth_t *)cdp->ptr)->header.len);
+                          // printf("header len %u\n",((message_auth_t *)cdp->ptr)->header.len);
                                
                             
 
@@ -164,6 +164,7 @@ int main() {
                                            break;
                                      }
                                      refreshClient(cdp);
+                                     printf("clientfd = %d\n",cdp->fd);
                                      cdp->client_state = MESSAGE_STATE;
                                  }
                              }
@@ -179,8 +180,11 @@ int main() {
                                 }else{
                                    if (cdp->buffer_used >= ((message_auth_t *)cdp->ptr)->header.len) {
                                          message_chat_t *msg_chat = decodeMessageChat(cdp);
+                                         //printf("to user : %s\n",msg_chat->to_user);
+                                         //printf("message : %s\n",msg_chat->message);
                                          int sender_fd = hb_tree_search(Tree,msg_chat->to_user);
-                                         uint32_t buff_size = sizeof(msg_chat);
+                                         uint32_t buff_size = msg_chat->header.len;
+
                                          Write(sender_fd,cdp->buff, buff_size);
                                          free(msg_chat->to_user);
                                          free(msg_chat->message);

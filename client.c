@@ -6,6 +6,7 @@
 
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <fcntl.h>
 
 #include <netinet/in.h>
 #include <unistd.h>
@@ -20,6 +21,9 @@ int main(int argc, char const *argv[])
 {
     int client_socket; 
     client_socket = socket(AF_INET,SOCK_STREAM,0);
+
+    //int flags = fcntl(client_socket, F_GETFL, 0);
+    //fcntl(client_socket, F_SETFL, flags|O_NONBLOCK);
    
     struct sockaddr_in  server_address;
     server_address.sin_family = AF_INET;
@@ -143,20 +147,26 @@ int main(int argc, char const *argv[])
             case MESSAGE_STATE : {
                  //printf("Message_state\n");
                  int option;
-                 printf("Enter 1 to Send Message\n Enter 2 to Recieve Message\n Enter 3 to close ");
+                 printf("\n\n");
+                 printf("Enter 1 to Send Message\nEnter 2 to Recieve Message\nEnter 3 to close\n");
                  scanf("%d",&option);
 
                  switch (option) {
                     case 1 : {
-                           uint8_t *buff;
+                           uint8_t *buff = NULL;
                            uint32_t buff_used = 0;
-                           createMessage(buff, &buff_used);
+                           
+                           buff = createMessage(buff, &buff_used); 
+
                            if (sendMessage(client_socket, buff, buff_used) < 0) { 
-                                 printf("Cannot Send \n");
+                                 printf("Error in Sending Message \n");
+
                                  continue;
                             }else{
                                 printf("Message send succesfully\n");
-                            }      
+                            }
+
+                           free(buff);
                             break;
                        }
 
@@ -167,7 +177,7 @@ int main(int argc, char const *argv[])
                            uint32_t read_buff_size = 0;
                            size_t bytes_read = 0;
                            while((bytes_read = read(client_socket,temp_buff,sizeof(temp_buff))) > 0){
-                                 //printf("bytes read %zu\n",bytes_read);  
+                                 printf("bytes read %zu\n",bytes_read);  
 
                               if(bytes_read == 0) break;
 
@@ -198,9 +208,12 @@ int main(int argc, char const *argv[])
                             }
 
                          }  
-
+                        
+                        printf("read_buff %u\n",read_buff_size);
                         message_chat_t* msg_chat = decodeMessage_recv(read_buff);
+                        printf("------------------------------------------------------------\n\n");
                         printf("Message from %s : %s\n",msg_chat->to_user, msg_chat->message);
+                        printf("------------------------------------------------------------\n\n");
 
                         free(msg_chat->to_user);
                         free(msg_chat->message);

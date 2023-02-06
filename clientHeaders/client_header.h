@@ -59,7 +59,7 @@ server_message_t*           decode_server_message(uint8_t *buff);
 
 void                        encodeMessage_send(message_chat_t* msg_chat, uint8_t* buff, uint32_t* buff_used);
 
-void                        createMessage(uint8_t* buff, uint32_t* buff_used);
+void*                       createMessage(uint8_t* buff, uint32_t* buff_used);
 
 int                         sendMessage(int fd,uint8_t* buff, uint32_t buff_size);
 

@@ -122,48 +122,67 @@ void
 encodeMessage_send(message_chat_t* msg_chat, uint8_t* buff, uint32_t* buff_used)
 {
     encode_header(msg_chat->header, buff, buff_used);
-    *((uint16_t* )(buff+*buff_used)) = ntohs(msg_chat->to_user_len);
+    
+    *((uint16_t* )(buff+*buff_used)) = htons(msg_chat->to_user_len);
     *buff_used += sizeof(msg_chat->to_user_len);
 
     memcpy(buff+*buff_used, msg_chat->to_user, msg_chat->to_user_len);
     *buff_used += msg_chat->to_user_len;
 
-    *((uint16_t* )(buff+*buff_used)) = ntohs(msg_chat->message_len);
+    *((uint16_t* )(buff+*buff_used)) = htons(msg_chat->message_len);
     *buff_used += sizeof(msg_chat->message_len);
 
      memcpy(buff+*buff_used, msg_chat->message, msg_chat->message_len);
     *buff_used += msg_chat->message_len;
+
+    return;
 }
 
 
-void
+void*
 createMessage(uint8_t* buff, uint32_t* buff_used)
 {
     message_chat_t* msg_chat = (message_chat_t*)malloc(sizeof(message_chat_t));
     msg_chat->header.magic = MAGIC;
     msg_chat->header.message_type = MSG_TYPE_CHAT_MSG;
+    
 
     printf("Enter username\n");
+    uint16_t len = 0;
+    size_t size = 0;
+    //len = getline(&msg_chat->to_user,&size,stdin);
+   // msg_chat->to_user[len-1] = '\0';
     scanf("%ms",&msg_chat->to_user);
     msg_chat->to_user_len = strlen(msg_chat->to_user);
+    printf("to user : %s\n",msg_chat->to_user);
 
-    uint16_t len =0;
-    size_t size =0;
+   // fflush(stdin);
+    int c;
+    while ((c = getchar()) != '\n' && c != EOF);
+
+   
     printf("Enter Message \n");
     len =  getline(&msg_chat->message, &size, stdin);
+    msg_chat->message[len-1] = '\0';
     msg_chat->message_len = len;
+    printf("message Len : %u\n",len);
+    printf("message : %s\n",msg_chat->message);
 
     msg_chat->header.len = sizeof(message_header_t) + msg_chat->to_user_len + msg_chat->message_len;
+    buff = NULL;
+    buff = (uint8_t *)malloc(msg_chat->header.len * sizeof(uint8_t));
 
-    buff = (uint8_t *)malloc(msg_chat->header.len * sizeof(char));
+    //printf("header len  : %u",msg_chat->header.len);
 
     encodeMessage_send(msg_chat, buff, buff_used);
+    
+    //printf("buff used %u\n",*buff_used); 
 
     free(msg_chat->to_user);
     free(msg_chat->message);
-    free(msg_chat);
+    free(msg_chat); 
    
-    return;   
+    return buff ;   
 }
 
 int
@@ -171,19 +190,21 @@ sendMessage(int fd, uint8_t* buff, uint32_t buff_size)
 {
      size_t total_bytes_send = 0;
 
-    //printf("buff size : %u\n",buff_size);
-    //printf("Write Started\n");
-    while(total_bytes_send < buff_size){
-          size_t bytes_sent = write(fd, buff+total_bytes_send, buff_size-total_bytes_send);
+    // printf("buff size : %u\n",buff_size);
+
+     while(total_bytes_send < buff_size){
+        size_t bytes_sent = write(fd, buff+total_bytes_send, buff_size-total_bytes_send);
        // printf("bytes sent : %zu\n",bytes_sent);
-        if(bytes_sent == -1) return -1;
+        if(bytes_sent == -1){
+            printf("write error\n");
+            return -1;
+        }
         
         total_bytes_send += bytes_sent;
-        //printf("total bytes send %zu\n",total_bytes_send);
+       // printf("total bytes send %zu\n",total_bytes_send);
     }
 
-    free(buff);
-    //printf("Write Complete\n");
+      // printf("Write Complete\n");
 
     return 0;
 
