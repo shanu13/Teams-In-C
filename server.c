@@ -103,6 +103,7 @@ int main() {
                     }
 
                     if (ret == 0) {
+                        printf("ret : "0"\n");
                         if (cdp->user != NULL) {
                             hb_tree_remove(Tree, cdp->user);
                         }
@@ -183,8 +184,9 @@ int main() {
                                          //printf("to user : %s\n",msg_chat->to_user);
                                          //printf("message : %s\n",msg_chat->message);
                                          int sender_fd = hb_tree_search(Tree,msg_chat->to_user);
-                                         uint32_t buff_size = msg_chat->header.len;
-
+                                         uint32_t buff_size = 0;
+                                         free(cdp->buff);
+                                         cdp->buff = updateBuff(cdp->buff, &buff_size, msg_chat, cdp->user);
                                          Write(sender_fd,cdp->buff, buff_size);
                                          free(msg_chat->to_user);
                                          free(msg_chat->message);

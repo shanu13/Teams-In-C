@@ -123,7 +123,7 @@ encode_header(message_header_t* header, uint8_t* buff, uint32_t* buff_size)
 void 
 encode_message(server_message_t* s_msg, uint8_t* buff, uint32_t* buff_size)
 {
-    encode_header(&(s_msg->header), buff,buff_size);
+    encode_header(&(s_msg->header), buff, buff_size);
     memcpy(buff+ *buff_size, s_msg->message,sizeof(s_msg->message));
     *buff_size += sizeof(s_msg->message);
    
@@ -351,5 +351,36 @@ decodeMessageChat(client_conn_data_t* client)
    client->offset = offset;
     
    return msg_chat;
+
+}
+
+void*
+updateBuff(uint8_t* buff, uint32_t* buff_used, message_chat_t* msg_chat, char* user)
+{
+    msg_chat->to_user_len = strlen(user);
+    msg_chat->header.len = sizeof(message_header_t) + msg_chat->to_user_len + msg_chat->message_len ;
+    free(msg_chat->to_user);
+
+    msg_chat->to_user = (char *)malloc(msg_chat->to_user_len);
+    strcpy(msg_chat->to_user,user);
+    
+    buff = (uint8_t*)malloc(msg_chat->header.len * sizeof(uint8_t));
+
+    encode_header(&msg_chat->header, buff, buff_used);
+
+    *((uint16_t* )(buff+*buff_used)) = htons(msg_chat->to_user_len);
+    *buff_used += sizeof(msg_chat->to_user_len);
+
+    memcpy(buff+*buff_used, msg_chat->to_user, msg_chat->to_user_len);
+    *buff_used += msg_chat->to_user_len;
+
+    *((uint16_t* )(buff+*buff_used)) = htons(msg_chat->message_len);
+    *buff_used += sizeof(msg_chat->message_len);
+
+     memcpy(buff+*buff_used, msg_chat->message, msg_chat->message_len);
+    *buff_used += msg_chat->message_len;
+
+
+    return buff;
 
 }

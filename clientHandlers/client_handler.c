@@ -15,6 +15,46 @@
 #define htonll(x) ((1==htonl(1)) ? (x) : ((uint64_t)htonl((x) & 0xFFFFFFFF) << 32) | htonl((x) >> 32))
 #define ntohll(x) ((1==ntohl(1)) ? (x) : ((uint64_t)ntohl((x) & 0xFFFFFFFF) << 32) | ntohl((x) >> 32))
 
+extern states_t curr_state;
+
+int
+startNewConnection()
+{
+    int client_socket; 
+    client_socket = socket(AF_INET,SOCK_STREAM,0);
+
+    //int flags = fcntl(client_socket, F_GETFL, 0);
+    //fcntl(client_socket, F_SETFL, flags|O_NONBLOCK);
+   
+    struct sockaddr_in  server_address;
+    server_address.sin_family = AF_INET;
+    server_address.sin_port = htons(9302);
+    server_address.sin_addr.s_addr = INADDR_ANY;
+
+	int connection_status = connect(client_socket,(struct sockaddr *) &server_address,sizeof(server_address));
+	
+	printf("%d\n",client_socket);
+	
+	if(connection_status == -1 ){
+		printf("There is an error for making connection\n\n");
+            close(client_socket);                       
+			return 0;
+	}
+	else
+        printf("connection established\n"); 
+
+    //int min_size = 14;
+
+    //setsockopt(client_socket,SOL_SOCKET,SO_SNDLOWAT,&min_size,sizeof(min_size));
+
+     curr_state = INITIAL_STATE;
+
+    return client_socket;
+
+}
+
+
+
 
 message_auth_t*
 createAuthToken()

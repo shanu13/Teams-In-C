@@ -27,6 +27,9 @@ int                     Header(client_conn_data_t* client);
 
 message_chat_t*         decodeMessageChat(client_conn_data_t* client);
 
+void*                   updateBuff(uint8_t* buff, uint32_t* buff_used, message_chat_t* msg_chat, char* user);
+
+
 
 
 

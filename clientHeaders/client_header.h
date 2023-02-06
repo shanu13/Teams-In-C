@@ -46,6 +46,7 @@ typedef struct server_message_s {
     char                   *message;
 } server_message_t;
 
+int                         startNewConnection();
 
 message_auth_t*             createAuthToken();
 

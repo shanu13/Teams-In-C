@@ -1,4 +1,4 @@
-# take stdin from console in terminal
+# take input(stdin) from console in terminal
 # according to input prepare the structre 
 # encode the structure and send server using write function
 # read in server what has client write
@@ -9,6 +9,15 @@
 # send message to client with respect to recv client , search his fd in tree on basis of name(key in tree)
 # send the message with 
 # whenever logout or err happend delete entry from tree
-# 
+
+
+#Logout Functionality
+#client -> make everything free and set state to initial state
+
+#server -> Notify for logout from client
+#          remove form HBtree
+#          free client from everything 
+
+
 
 
