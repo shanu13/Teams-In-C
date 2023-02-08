@@ -305,37 +305,53 @@ int main(){
 
     //printf("search user fd : %d\n",hb_tree_search(tree,"zuser"));
 
-   char* line;
-   size_t size = 0;
-   uint16_t  len =0,len2 = 0;;
-   char* user;
-    //scanf("%ms", &user);
-    len = getline(&user,&size,stdin);
-    len =0;
-    size = 0;
+  // char* line;
+  // size_t size = 0;
+  // uint16_t  len =0,len2 = 0;;
+  // char* user;
+  //  //scanf("%ms", &user);
+  //  len = getline(&user,&size,stdin);
+  //  len =0;
+  //  size = 0;
 
-    printf("user : %s\n",user);
-    //line[strlen(line)] = '\0';
+  //  printf("user : %s\n",user);
+  //  //line[strlen(line)] = '\0';
 
-    len = getline(&line,&size,stdin);
+  //  len = getline(&line,&size,stdin);
 
-    printf("len : %d\n", len);
-    printf("size : %zu\n", size);
-    line[len-1] = '\0';
+  //  printf("len : %d\n", len);
+  //  printf("size : %zu\n", size);
+  //  line[len-1] = '\0';
 
-    printf("string  : %s\n", line);
+  //  printf("string  : %s\n", line);
 
-    printf("size of %zu\n",sizeof(line));
+  //  printf("size of %zu\n",sizeof(line));
+
+  //  printf("\n");
+
+  //   void* ptr ;
+  //   int a = 6;
+  //   ptr = &a;
+
+  //   int* b = ptr;
+
+  //   printf("%d\n",*b);
+
+
+    char* str1 = (char*)malloc(20);
+    strcpy(str1,"shantanu");
+    char* str2 = (char*)malloc(20);
+    strcpy(str2,str1);
+
+    for (int i=0; i<strlen(str1); i++) {
+        printf("%c",*(str1+i));
+    }
 
     printf("\n");
 
-     void* ptr ;
-     int a = 6;
-     ptr = &a;
+    free(str1);
+    free(str2);
 
-     int* b = ptr;
-
-     printf("%d\n",*b);
 
     return 0;
 }

@@ -1,6 +1,6 @@
 #include <stdint.h>
 
-#define SIZE_HEADER sizeof(message_header_t)
+#define SIZE_HEADER 12 
 
 typedef enum message_types_e {
     MSG_TYPE_INVALID = 0,

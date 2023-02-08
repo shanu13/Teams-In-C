@@ -61,10 +61,11 @@ int main(int argc, char const *argv[])
             case INITIAL_STATE :{ 
                  message_auth_t *auth_token = createAuthToken();
                  uint8_t *out_buffer = (uint8_t *)malloc(sizeof(message_auth_t)*sizeof(uint8_t));
-                 int out_buffer_used = 0;
+                 uint32_t out_buffer_used = 0;
                  encode_auth_msg(auth_token, out_buffer, &out_buffer_used);
 
                  size_t total_bytes_send =0;
+                 printf("initial out buffer used %u \n",out_buffer_used); 
 
                  while(total_bytes_send < out_buffer_used){
                      size_t bytes_send = write(client_socket,out_buffer+total_bytes_send, out_buffer_used-total_bytes_send);
@@ -75,7 +76,7 @@ int main(int argc, char const *argv[])
 
                     total_bytes_send +=bytes_send;
                 }
-                 
+                
                  free(auth_token->user);
                  free(auth_token->password);
                  free(auth_token);

@@ -99,6 +99,7 @@ closeConn(int epfd, client_conn_data_t* client, struct epoll_event* ev)
      }
      close(clientfd);
      freeClient(client);
+    
      return;
 }
 
@@ -124,8 +125,8 @@ void
 encode_message(server_message_t* s_msg, uint8_t* buff, uint32_t* buff_size)
 {
     encode_header(&(s_msg->header), buff, buff_size);
-    memcpy(buff+ *buff_size, s_msg->message,sizeof(s_msg->message));
-    *buff_size += sizeof(s_msg->message);
+    memcpy(buff+ *buff_size, s_msg->message,strlen(s_msg->message));
+    *buff_size += strlen(s_msg->message);
    
     return;
 }
@@ -153,14 +154,14 @@ decode_message_auth(uint8_t* in_buffer, message_auth_t* auth_token, uint32_t* of
     auth_token->user_len = ntohs(*((uint16_t *)(in_buffer+ *offset)));
     *offset+= sizeof(auth_token->user_len);
 
-    auth_token->user = (char *)malloc((auth_token->user_len)*sizeof(char));
+    auth_token->user = (char *)calloc((auth_token->user_len),sizeof(char));
     memcpy(auth_token->user,in_buffer+ *offset,(auth_token->user_len));
     *offset+= auth_token->user_len;
 
     auth_token->password_len = ntohs(*((uint16_t *)(in_buffer+ *offset)));
     *offset+= sizeof(auth_token->password_len);
 
-    auth_token->password = (char *)malloc((auth_token->password_len)*sizeof(char));
+    auth_token->password = (char *)calloc((auth_token->password_len),sizeof(char));
     memcpy(auth_token->password,in_buffer+ *offset,(auth_token->password_len));
     *offset+= auth_token->password_len;
 
@@ -190,11 +191,25 @@ VerifyHeader(client_conn_data_t* client)
 int
 AuthVerify(const char* user, const char* password)
 { 
-    if(strcmp(user,"shantanu") == 0  && strcmp(password,"shantanu") == 0)
+    if(strcmp(user,"user1") == 0  && strcmp(password,"user1") == 0)
         return 0;
-    else if(strcmp(user,"mridul") == 0 &&  strcmp(password,"mridul") == 0)
+    else if(strcmp(user,"user2") == 0 &&  strcmp(password,"user2") == 0)
         return 0;
-    else if(strcmp(user,"udit") == 0  && strcmp(password,"udit") == 0)
+    else if(strcmp(user,"user3") == 0  && strcmp(password,"user3") == 0)
+        return 0;
+    else if(strcmp(user,"user4") == 0  && strcmp(password,"user4") == 0)
+        return 0;
+    else if(strcmp(user,"user5") == 0  && strcmp(password,"user5") == 0)
+        return 0;
+    else if(strcmp(user,"user6") == 0  && strcmp(password,"user6") == 0)
+        return 0;
+    else if(strcmp(user,"user7") == 0  && strcmp(password,"user7") == 0)
+        return 0;
+    else if(strcmp(user,"user8") == 0  && strcmp(password,"user8") == 0)
+        return 0;
+    else if(strcmp(user,"user9") == 0  && strcmp(password,"user9") == 0)
+        return 0;
+    else if(strcmp(user,"user10") == 0  && strcmp(password,"user10") == 0)
         return 0;
 
     return -1;
@@ -207,14 +222,15 @@ Authenticate(client_conn_data_t* client, hb_tree_t* Tree)
     hb_tree_t* tree = Tree;
     decode_message_auth(client->buff, client->ptr, &(client->offset));
     message_auth_t *temp =(message_auth_t *)client->ptr;
-   // printf("username : %s\n",temp->user);
-   // printf("username len %u\n",temp->user_len);
+    printf("username : %s\n",temp->user);
+    printf("username len %u\n",temp->user_len);
 
-   // printf("password len %u\n",temp->password_len);
-   // printf("password : %s\n",temp->password);
+    printf("password len %u\n",temp->password_len);
+    printf("password : %s\n",temp->password);
     if(AuthVerify(((message_auth_t*)client->ptr)->user,((message_auth_t *)client->ptr)->password) < 0){
             free(((message_auth_t*)client->ptr)->user);
             free(((message_auth_t *)client->ptr)->password);
+            printf("wrong id or passwords\n");
             return -1;
     }
     
@@ -261,9 +277,10 @@ int SendMessage(char* message, int fd)
     s_msg->header.magic = MAGIC;
     s_msg->header.message_type = SERVER_INFO;
     s_msg->message = message;
-    s_msg->header.len = sizeof(message_header_t) + strlen(message);
+    //s_msg->header.len = sizeof(message_header_t) + strlen(message);
+    s_msg->header.len = 12 + strlen(message);
 
-    uint8_t* buff = (uint8_t *)malloc(sizeof(server_message_t)*sizeof(uint8_t));
+    uint8_t* buff = (uint8_t *)malloc(s_msg->header.len*sizeof(uint8_t));
     uint32_t buff_size = 0;
     encode_message(s_msg,buff,&buff_size);
     if(Write(fd,buff,buff_size) < 0) return -1;

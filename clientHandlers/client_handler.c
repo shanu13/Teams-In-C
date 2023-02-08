@@ -139,9 +139,10 @@ decode_server_message (uint8_t *buff)
     //printf("decoding server message \n");
     server_message_t *s_msg = (server_message_t *)malloc(sizeof(server_message_t));
     s_msg->message = NULL;
-
+    
     uint32_t offset =0;
     decode_header(&s_msg->header, buff, &offset);
+    printf("decode_heder offset : %u\n",offset);
     if (s_msg->header.magic != MAGIC) {
         free(s_msg);
         return NULL;
@@ -149,11 +150,11 @@ decode_server_message (uint8_t *buff)
 
    // printf("header decoded \n");
     printf("total length : %u\n",s_msg->header.len);
-    printf("offset : %u\n",offset);
+  
     //s_msg->message = (char *)malloc((s_msg->header.len - sizeof(message_header_t))*(sizeof(char)));
-    s_msg->message = (char *)calloc((s_msg->header.len - sizeof(message_header_t)), sizeof(char));
-    memcpy(s_msg->message, buff+offset, s_msg->header.len - sizeof(message_header_t));
-    offset+= s_msg->header.len - sizeof(message_header_t);
+    s_msg->message = (char *)calloc((s_msg->header.len - SIZE_HEADER), sizeof(char));
+    memcpy(s_msg->message, buff+offset, s_msg->header.len - SIZE_HEADER);
+    offset+= s_msg->header.len - SIZE_HEADER;
 
     return s_msg;
 }

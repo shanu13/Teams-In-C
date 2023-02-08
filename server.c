@@ -102,8 +102,7 @@ int main() {
                         continue;
                     }
 
-                    if (ret == 0) {
-                        printf("ret : "0"\n");
+                    if (ret == 0) { 
                         if (cdp->user != NULL) {
                             hb_tree_remove(Tree, cdp->user);
                         }
@@ -128,7 +127,7 @@ int main() {
                     states_t curr_state =  cdp->client_state; 
 
                     //printf("current state %d\n",curr_state);
-                   // printf("buffer used %u\n",cdp->buffer_used);
+                    //printf("buffer used %u\n",cdp->buffer_used);
 
                     switch(curr_state){
                     
@@ -145,13 +144,14 @@ int main() {
                             }else{
                                 continue;
                             }
-                          // printf("header len %u\n",((message_auth_t *)cdp->ptr)->header.len);
+                           printf("header len %u\n",((message_auth_t *)cdp->ptr)->header.len);
                                
                             
 
                          case AUTH_STATE :
                             if(cdp->buffer_used >= ((message_auth_t *)cdp->ptr)->header.len){ 
                                  printf("AUTH STATE\n");
+                                 printf("cdp->buffer_used %u\n",cdp->buffer_used);
                                  if(Authenticate(cdp,Tree) < 0){
                                      SendMessage("401",cdp->fd);
                                      printf("Invalid Credentials\n");
