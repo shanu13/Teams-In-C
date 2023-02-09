@@ -23,7 +23,11 @@ states_t curr_state;
 
 int main(int argc, char const *argv[])
 {
-    int client_socket = startNewConnection(); 
+    int client_socket = startNewConnection();
+    if (client_socket < 0) {
+        return 0;
+    }
+
    // client_socket = socket(AF_INET,SOCK_STREAM,0);
 
    // //int flags = fcntl(client_socket, F_GETFL, 0);
@@ -176,11 +180,12 @@ int main(int argc, char const *argv[])
                        }
 
                     case 2 : {
-                           uint8_t temp_buff[1024];
+                           uint8_t   temp_buff[1024];
                            bzero(temp_buff,0);
-                           uint8_t *read_buff = NULL;
-                           uint32_t read_buff_size = 0;
-                           size_t bytes_read = 0;
+                           uint8_t  *read_buff = NULL;
+                           uint32_t  read_buff_size = 0;
+                           size_t    bytes_read = 0;
+                           uint32_t  offset = 0;
                            while((bytes_read = read(client_socket,temp_buff,sizeof(temp_buff))) > 0){
                                  printf("bytes read %zu\n",bytes_read);  
 
@@ -201,11 +206,29 @@ int main(int argc, char const *argv[])
 
                               bool is_read_full = false;
 
-                              if (read_buff_size >= SIZE_HEADER) {
-                                 uint16_t len = ntohs(*((uint16_t *)(read_buff+8)));
-                                 if (read_buff_size >= len ) {
-                                        is_read_full = true;
-                                }  
+                              //if (read_buff_size >= SIZE_HEADER) {
+                                 
+                              while (read_buff_size >= (offset+SIZE_HEADER)) {
+    
+                                 uint16_t len = ntohs(*((uint16_t *)(read_buff+offset+8)));
+                                 
+                                 if (read_buff_size >= (offset+len)) {
+                                         message_chat_t* msg_chat = decodeMessage_recv(read_buff+offset);
+                                         printf("------------------------------------------------------------\n\n");
+                                         printf("Message from %s : %s\n\n",msg_chat->to_user, msg_chat->message);
+                                         printf("------------------------------------------------------------\n\n");
+
+                                         free(msg_chat->to_user);
+                                         free(msg_chat->message);
+                                         free(msg_chat);
+
+                                         offset += len;
+                                         //printf("offset %u\n",offset);
+                                         if (offset+len == read_buff_size) {
+                                              is_read_full = true;
+                                         }
+                                }else 
+                                    break;
                              }
 
                             if (is_read_full){
@@ -213,32 +236,21 @@ int main(int argc, char const *argv[])
                             }
 
                          }  
-                        
+                       
                         printf("read_buff %u\n",read_buff_size);
-                        message_chat_t* msg_chat = decodeMessage_recv(read_buff);
-                        printf("------------------------------------------------------------\n\n");
-                        printf("Message from %s : %s\n\n",msg_chat->to_user, msg_chat->message);
-                        printf("------------------------------------------------------------\n\n");
+                        //message_chat_t* msg_chat = decodeMessage_recv(read_buff);
+                        //printf("------------------------------------------------------------\n\n");
+                        //printf("Message from %s : %s\n\n",msg_chat->to_user, msg_chat->message);
+                        //printf("------------------------------------------------------------\n\n");
 
-                        free(msg_chat->to_user);
-                        free(msg_chat->message);
-                        free(msg_chat);
-
+                        //free(msg_chat->to_user);
+                        //free(msg_chat->message);
+                        
                         break;
                       }
 
                   case 3 : {
                         
-                        // printf("Logout\n");
-                        // size_t bytes_sent = write(client_socket, NULL, 0);
-                        // if (bytes_sent  == -1) {
-                        //    perror("Error in Logout");
-                        // } else {
-                        //    printf("\n----------------------------------------------------------\n\n\n");
-                        //    printf("Successfully Logout !!!\n\n\n");
-                        //    printf("----------------------------------------------------------\n\n\n");
-
-                        // }
                             printf("\n----------------------------------------------------------\n\n\n");
                             printf("Successfully Logout !!!\n\n\n");
                             printf("----------------------------------------------------------\n\n\n");
@@ -248,6 +260,9 @@ int main(int argc, char const *argv[])
 
                             //curr_state = INITIAL_STATE;
                             client_socket = startNewConnection();
+                            if (client_socket < 0) {
+                                 return 0;
+                            }
                           break;
                       }
 
